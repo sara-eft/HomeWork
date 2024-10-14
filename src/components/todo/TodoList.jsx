@@ -35,34 +35,19 @@ const TodoList = () => {
 
   // Save tasks to Local Storage whenever tasks change
   useEffect(() => {
-    setTasks(JSON.parse(localStorage.getItem("tasks")));
-  }, [localStorage.getItem("tasks")]);
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
 
   const handleAddOrUpdateTask = () => {
     if (newTask.name) {
       if (editIndex !== null) {
-        // const updatedTasks = tasks.map((task, index) =>
-        //   index === editIndex ? { ...task, ...newTask } : task
-        // );
-        // setTasks(updatedTasks);
-        localStorage.setItem(
-          "tasks",
-          JSON.stringify(
-            tasks.map((task, index) =>
-              index === editIndex ? { ...task, ...newTask } : task
-            )
-          )
+        const updatedTasks = tasks.map((task, index) =>
+          index === editIndex ? { ...task, ...newTask } : task
         );
+        setTasks(updatedTasks);
         setEditIndex(null);
       } else {
-        // setTasks([...tasks, { ...newTask, id: Date.now(), isDone: false }]); // Add isDone property
-        localStorage.setItem(
-          "tasks",
-          JSON.stringify([
-            ...tasks,
-            { ...newTask, id: Date.now(), isDone: false },
-          ])
-        );
+        setTasks([...tasks, { ...newTask, id: Date.now(), isDone: false }]);
       }
       setNewTask({ name: "", status: "pending", type: "", duration: 0 });
     }
@@ -70,10 +55,6 @@ const TodoList = () => {
 
   const handleDeleteTask = (id) => {
     const newTasks = tasks.filter((task) => task.id !== id);
-    localStorage.setItem(
-      "tasks",
-      JSON.stringify(tasks.filter((task) => task.id !== id))
-    );
     setTasks(newTasks);
   };
 
@@ -92,14 +73,6 @@ const TodoList = () => {
     const updatedTasks = tasks.map((task, i) =>
       i === index ? { ...task, isDone: !task.isDone } : task
     );
-    localStorage.setItem(
-      "tasks",
-      JSON.stringify(
-        tasks.map((task, i) =>
-          i === index ? { ...task, isDone: !task.isDone } : task
-        )
-      )
-    );
     setTasks(updatedTasks);
   };
 
@@ -114,35 +87,35 @@ const TodoList = () => {
     );
 
   return (
-    <div style={{ padding: "50px" }}>
+    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           gap: "10px",
+          flexWrap: "wrap",
         }}
       >
-        <h2>To-Do List</h2>
-        <div>
+        <h2 style={{ flexGrow: 1 }}>To-Do List</h2>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
           <TextField
             label="Search"
             variant="outlined"
             style={{
-              margin: "10px 0",
-              minWidth: "300px",
+              minWidth: "250px",
+              flexGrow: 1,
             }}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <FormControl variant="outlined" style={{ margin: "10px 0" }}>
+          <FormControl variant="outlined" style={{ minWidth: "140px" }}>
             <InputLabel id="filter-label">Filter By Status</InputLabel>
             <Select
               labelId="filter-label"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               label="Filter By Status"
-              style={{ minWidth: "140px" }}
             >
               <MenuItem value="all">All</MenuItem>
               <MenuItem value="completed">Completed</MenuItem>
@@ -152,9 +125,9 @@ const TodoList = () => {
         </div>
       </div>
 
-      <div style={{ display: "flex" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
         <TextField
-          style={{ minWidth: "300px" }}
+          style={{ flex: "1 1 250px", minWidth: "250px" }}
           label="Task Name"
           variant="outlined"
           value={newTask.name}
@@ -175,18 +148,15 @@ const TodoList = () => {
         </FormControl>
         <TextField
           label="Duration (min)"
-          style={{ margin: "0 0px 0 10px", minWidth: "50px" }}
           variant="outlined"
           type="number"
+          style={{ minWidth: "80px" }}
           value={newTask.duration}
           onChange={(e) =>
             setNewTask({ ...newTask, duration: +e.target.value })
           }
         />
-        <FormControl
-          variant="outlined"
-          style={{ margin: "0 10px", minWidth: "140px" }}
-        >
+        <FormControl variant="outlined" style={{ minWidth: "140px" }}>
           <InputLabel id="task-status-label">Status</InputLabel>
           <Select
             labelId="task-status-label"
@@ -202,44 +172,43 @@ const TodoList = () => {
           variant="contained"
           color="primary"
           onClick={handleAddOrUpdateTask}
-          style={{ minWidth: "140px" }}
+          style={{ minWidth: "140px", flexGrow: 1 }}
         >
           {editIndex !== null ? "Update Task" : "Add Task"}
         </Button>
       </div>
-      <div>
-        <List>
-          {filteredTasks.map((task, index) => (
-            <ListItem
-              key={task.id}
-              style={{ color: task.isDone ? "green" : "black" }}
+
+      <List style={{ marginTop: "20px" }}>
+        {filteredTasks.map((task, index) => (
+          <ListItem
+            key={task.id}
+            style={{ color: task.isDone ? "green" : "black" }}
+          >
+            <Checkbox
+              checked={task.isDone}
+              onChange={() => handleToggleDone(index)}
+            />
+            <ListItemText
+              primary={task.name}
+              secondary={`Status: ${task.status} | Type: ${task.type} | Duration: ${task.duration} mins`}
+            />
+            <IconButton
+              edge="end"
+              aria-label="edit"
+              onClick={() => handleEditTask(index)}
             >
-              <Checkbox
-                checked={task.isDone}
-                onChange={() => handleToggleDone(index)}
-              />
-              <ListItemText
-                primary={task.name}
-                secondary={`Status: ${task.status} | Type: ${task.type} | Duration: ${task.duration} mins`}
-              />
-              <IconButton
-                edge="end"
-                aria-label="edit"
-                onClick={() => handleEditTask(index)}
-              >
-                <EditIcon />
-              </IconButton>
-              <IconButton
-                edge="end"
-                aria-label="delete"
-                onClick={() => handleDeleteTask(task.id)}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </ListItem>
-          ))}
-        </List>
-      </div>
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              edge="end"
+              aria-label="delete"
+              onClick={() => handleDeleteTask(task.id)}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </ListItem>
+        ))}
+      </List>
     </div>
   );
 };
