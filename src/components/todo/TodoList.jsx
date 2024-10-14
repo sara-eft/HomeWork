@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import useDebounce from "../../helper/useDebounce";
 
 const TodoList = () => {
   const [tasks, setTasks] = useState([]);
@@ -35,19 +36,29 @@ const TodoList = () => {
 
   // Save tasks to Local Storage whenever tasks change
   useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
+    setTasks(JSON.parse(localStorage.getItem("tasks")));
+  }, [localStorage.getItem("tasks")]);
 
   const handleAddOrUpdateTask = () => {
     if (newTask.name) {
       if (editIndex !== null) {
-        const updatedTasks = tasks.map((task, index) =>
-          index === editIndex ? { ...task, ...newTask } : task
+        localStorage.setItem(
+          "tasks",
+          JSON.stringify(
+            tasks.map((task, index) =>
+              index === editIndex ? { ...task, ...newTask } : task
+            )
+          )
         );
-        setTasks(updatedTasks);
         setEditIndex(null);
       } else {
-        setTasks([...tasks, { ...newTask, id: Date.now(), isDone: false }]);
+        localStorage.setItem(
+          "tasks",
+          JSON.stringify([
+            ...tasks,
+            { ...newTask, id: Date.now(), isDone: false },
+          ])
+        );
       }
       setNewTask({ name: "", status: "pending", type: "", duration: 0 });
     }
@@ -55,6 +66,10 @@ const TodoList = () => {
 
   const handleDeleteTask = (id) => {
     const newTasks = tasks.filter((task) => task.id !== id);
+    localStorage.setItem(
+      "tasks",
+      JSON.stringify(tasks.filter((task) => task.id !== id))
+    );
     setTasks(newTasks);
   };
 
@@ -72,6 +87,14 @@ const TodoList = () => {
   const handleToggleDone = (index) => {
     const updatedTasks = tasks.map((task, i) =>
       i === index ? { ...task, isDone: !task.isDone } : task
+    );
+    localStorage.setItem(
+      "tasks",
+      JSON.stringify(
+        tasks.map((task, i) =>
+          i === index ? { ...task, isDone: !task.isDone } : task
+        )
+      )
     );
     setTasks(updatedTasks);
   };
