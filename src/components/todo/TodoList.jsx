@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import useDebounce from "../../helper/useDebounce";
+import useDebounce from "../../helper/useDebounce"; // import the debounce hook
 
 const TodoList = () => {
   const [tasks, setTasks] = useState([]);
@@ -27,6 +27,7 @@ const TodoList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
   const [editIndex, setEditIndex] = useState(null);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500); // Use the debounce hook with 1 second delay
 
   // Load tasks from Local Storage
   useEffect(() => {
@@ -99,15 +100,15 @@ const TodoList = () => {
     setTasks(updatedTasks);
   };
 
-  const filteredTasks = tasks
-    .filter((task) => {
-      if (filter === "completed") return task.status === "completed";
-      if (filter === "pending") return task.status === "pending";
-      return true; // return all tasks if 'all' is selected
-    })
-    .filter((task) =>
-      task.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const filteredTasks = tasks.filter((task) => {
+    if (filter === "completed" && task.status !== "completed") return false;
+    if (filter === "pending" && task.status !== "pending") return false;
+
+    // Check that task name is defined before calling toLowerCase
+    return task?.name
+      ?.toLowerCase()
+      ?.includes(debouncedSearchTerm.toLowerCase() || "");
+  });
 
   return (
     <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
